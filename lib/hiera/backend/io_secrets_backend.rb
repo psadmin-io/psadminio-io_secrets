@@ -72,11 +72,11 @@ class Hiera
   
           Hiera.debug("Looking up #{key} in IO Secrets bw")
           group_toggle = ""
-          unless @config[:group] == 'none'
-            group_id = `bw list folders --search #{@config[:group]} | jq -r .[].id`
-            Hiera.debug("Group ID: #{group_id}")
-            group_toggle = "--folderid #{group_id}"
-          end
+          #unless @config[:group] == 'none'
+          #  group_id = `bw list folders --search #{@config[:group]} | jq -r .[].id`
+          #  Hiera.debug("Group ID: #{group_id}")
+          #  group_toggle = "--folderid #{group_id}"
+          #end
 
           # TODO - replace jq with Ruby JSON parsing? Otherwise we have to do multiple calls, since piping was having an issue...
           #secret_value = `bw list items --search #{secret_name} #{group_toggle} | jq -r .[].login.password`
