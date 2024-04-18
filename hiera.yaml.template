@@ -2,7 +2,7 @@
 :backends:
   - eyaml
   - yaml
-  - io_vault
+  - io_secrets
 
 :hierarchy:
   - defaults
@@ -22,5 +22,5 @@
   :pkcs7_private_key: /u01/app/psoft/dpk/puppet/secure/keys/private_key.pkcs7.pem
   :pkcs7_public_key:  /u01/app/psoft/dpk/puppet/secure/keys/public_key.pkcs7.pem
 
-:io_vault:
-  :vault_type: bw 
+:io_secrets:
+  :vault: bw 

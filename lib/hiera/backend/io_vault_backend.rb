@@ -8,11 +8,11 @@ class Hiera
           require 'json'
 
           @config = Config[:io_vault]
-          @config[:type] ||= ['none'] # bw, oci, test
+          @config[:vault] ||= ['none'] # bw, oci, test
           @config[:id] ||= ['none'] # ocid, etc
           @config[:group] ||= ['none'] # folder or other grouping, normally at Env level
 
-          case @config[:type]
+          case @config[:vault]
           when 'test'
             @lookup_backend = "lookup_test"
           when 'bw'
