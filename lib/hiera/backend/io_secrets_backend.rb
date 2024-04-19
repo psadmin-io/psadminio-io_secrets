@@ -6,21 +6,27 @@ class Hiera
           Hiera.debug("Hiera IO Secrets backend starting")
           
           require 'json'          
-          
-          unless Config[:io_secrets]
-            raise Exception, "[hiera-io_secrets] there was an issue finding :io_secrets config in hiera.yaml"
-          end
+
+          #unless Config[:io_secrets]
+          #  raise Exception, "[hiera-io_secrets] there was an issue finding :io_secrets config in hiera.yaml"
+          #end
 
           @config = Config[:io_secrets]
           @config[:vault] ||= 'none' # bw, oci, test
           @config[:id] ||= 'none' # ocid, etc
-          @config[:group] ||= 'none'  # folder or other grouping, normally at Env level
-          @config[:prefix] ||= 'none' # string in front of secret name, normally at Env level
-          @config[:suffix] ||= 'none' # string at end of secret name, normally at Env level
+          @config[:group_fact] ||= 'none'  # folder or other grouping, normally at Env level
+          @config[:prefix_fact] ||= 'none' # string in front of secret name, normally at Env level
+          @config[:suffix_fact] ||= 'none' # string at end of secret name, normally at Env level
 
+          # Lookup facts
+          @config[:group] = facter_lookup(@config[:group_fact])
+          @config[:prefix] = facter_lookup(@config[:prefix_fact])
+          @config[:suffix] = facter_lookup(@config[:suffix_fact])
+
+          # Debug Config
           Hiera.debug("Hiera IO Secrets - config[:vault] = #{@config[:vault]}")
           Hiera.debug("Hiera IO Secrets - config[:id] = #{@config[:id]}")
-          Hiera.debug("Hiera IO Secrets - config[:group] = #{@config[:grouup]}")
+          Hiera.debug("Hiera IO Secrets - config[:group] = #{@config[:group]}")
           Hiera.debug("Hiera IO Secrets - config[:prefix] = #{@config[:prefix]}")
           Hiera.debug("Hiera IO Secrets - config[:suffix] = #{@config[:suffix]}")
 
@@ -38,6 +44,20 @@ class Hiera
 
           if false
             raise Exception, "[hiera-io_secrets] some exception TODO '#{@config[:vault]}'"
+          end
+        end
+
+        def facter_lookup(fact)
+          unless fact == 'none'
+            result = Facter.value(fact)
+            
+            if result.nil?
+              raise Exception, "[hiera-io_secrets] fact '#{fact}' was not found"
+            end
+           
+            return result
+          else
+            return 'none'           
           end
         end
   
