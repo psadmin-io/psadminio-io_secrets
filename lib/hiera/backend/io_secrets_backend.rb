@@ -14,7 +14,15 @@ class Hiera
           @config = Config[:io_secrets]
           @config[:vault] ||= 'none' # bw, oci, test
           @config[:id] ||= 'none' # ocid, etc
-          @config[:group] ||= 'none' # folder or other grouping, normally at Env level
+          @config[:group] ||= 'none'  # folder or other grouping, normally at Env level
+          @config[:prefix] ||= 'none' # string in front of secret name, normally at Env level
+          @config[:suffix] ||= 'none' # string at end of secret name, normally at Env level
+
+          Hiera.debug("Hiera IO Secrets - config[:vault] = #{@config[:vault]}")
+          Hiera.debug("Hiera IO Secrets - config[:id] = #{@config[:id]}")
+          Hiera.debug("Hiera IO Secrets - config[:group] = #{@config[:grouup]}")
+          Hiera.debug("Hiera IO Secrets - config[:prefix] = #{@config[:prefix]}")
+          Hiera.debug("Hiera IO Secrets - config[:suffix] = #{@config[:suffix]}")
 
           case @config[:vault]
           when 'test'
@@ -66,9 +74,6 @@ class Hiera
         def lookup_bw(key, scope)
           answer = nil          
           return if key.start_with?('io_secrets::') == false
-  
-          secret_name = key.dup
-          secret_name.slice! "io_secrets::"
  
           # Group Lookup
           Hiera.debug("Looking up #{key} in IO Secrets bw")
@@ -87,9 +92,21 @@ class Hiera
             end
           end
 
+          # Secret Name Prep
+          secret_name = key.dup
+          secret_name.slice! "io_secrets::"
+     
+          unless @config[:prefix] == 'none'
+            secret_name = @config[:prefix] + secret_name 
+          end
+          
+          unless @config[:suffix] == 'none'
+            secret_name = secret_name + @config[:suffix] 
+          end
+
           # Secret Lookup
           Hiera.debug("Secret Name: #{secret_name}")
-          bw_json = JSON.parse(`bw list items --search #{secret_name} #{group_toggle}`)
+          bw_json = JSON.parse(`bw list items --search '#{secret_name}' #{group_toggle}`)
           
           if bw_json.size == 1
             secret_value = bw_json[0]["login"]["password"]
