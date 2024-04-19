@@ -23,4 +23,7 @@
   :pkcs7_public_key:  /u01/app/psoft/dpk/puppet/secure/keys/public_key.pkcs7.pem
 
 :io_secrets:
-  :vault: bw 
+  :vault:   'bw' 
+  :group:   'io_secrets_group'
+#  :prefix:  'io_secrets_prefix'
+#  :suffix:  'io_secrets_suffix'
