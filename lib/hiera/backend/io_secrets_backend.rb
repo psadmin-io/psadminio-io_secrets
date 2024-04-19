@@ -12,9 +12,9 @@ class Hiera
           end
 
           @config = Config[:io_secrets]
-          @config[:vault] ||= ['none'] # bw, oci, test
-          @config[:id] ||= ['none'] # ocid, etc
-          @config[:group] ||= ['none'] # folder or other grouping, normally at Env level
+          @config[:vault] ||= 'none' # bw, oci, test
+          @config[:id] ||= 'none' # ocid, etc
+          @config[:group] ||= 'none' # folder or other grouping, normally at Env level
 
           case @config[:vault]
           when 'test'
@@ -64,21 +64,30 @@ class Hiera
         end
 
         def lookup_bw(key, scope)
-          answer = nil
-          
+          answer = nil          
           return if key.start_with?('io_secrets::') == false
   
           secret_name = key.dup
           secret_name.slice! "io_secrets::"
-  
+ 
+          # Group Lookup
           Hiera.debug("Looking up #{key} in IO Secrets bw")
-          group_toggle = ""
-          #unless @config[:group] == 'none'
-          #  group_id = `bw list folders --search #{@config[:group]} | jq -r .[].id`
-          #  Hiera.debug("Group ID: #{group_id}")
-          #  group_toggle = "--folderid #{group_id}"
-          #end
+          if @config[:group] == 'none'
+            group_toggle = "" # skip group criteria if not set in config
+	  else
+            bw_json = JSON.parse(`bw list folders --search #{@config[:group]}`)
+            if bw_json.size == 1
+              group_id = bw_json[0]["id"]
+              Hiera.debug("Group ID: #{group_id}")
+              group_toggle = "--folderid #{group_id}"
+            elsif bw_json.size > 1
+              raise Exception, "[hiera-io_secrets] multiple groups were found, group name '#{@config[:group]}' not unique in vault"
+            else
+              raise Exception, "[hiera-io_secrets] no '#{@config[:group]}' group was found in vault"
+            end
+          end
 
+          # Secret Lookup
           Hiera.debug("Secret Name: #{secret_name}")
           bw_json = JSON.parse(`bw list items --search #{secret_name} #{group_toggle}`)
           
