@@ -1,0 +1,11 @@
+{
+  "name": "psadminio-io_secrets",
+  "version": "0.1",
+  "author": "psadmin.io",
+  "summary": "This module is a Hiera backend for PeopleSoft secrets stored in vaults to be use with DPK",
+  "source": "psadmin.io",
+  "license": "MIT License",
+  "dependencies": [
+    {"version_requirement":">= 1.0.0","name":"puppetlabs-stdlib"}
+  ]
+}

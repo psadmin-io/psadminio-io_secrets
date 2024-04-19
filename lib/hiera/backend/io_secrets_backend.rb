@@ -5,9 +5,13 @@ class Hiera
         def initialize
           Hiera.debug("Hiera IO Secrets backend starting")
           
-          require 'json'
+          require 'json'          
+          
+          unless Config[:io_secrets]
+            raise Exception, "[hiera-io_secrets] there was an issue finding :io_secrets config in hiera.yaml"
+          end
 
-          @config = Config[:io_vault]
+          @config = Config[:io_secrets]
           @config[:vault] ||= ['none'] # bw, oci, test
           @config[:id] ||= ['none'] # ocid, etc
           @config[:group] ||= ['none'] # folder or other grouping, normally at Env level
@@ -25,12 +29,12 @@ class Hiera
           end
 
           if false
-            raise Exception, "[hiera-io_secrets] some exception TODO '#{@config[:backend]}'"
+            raise Exception, "[hiera-io_secrets] some exception TODO '#{@config[:vault]}'"
           end
         end
   
         def lookup(key, scope, order_override, resolution_type)
-          return if key.start_with?('io_vault::') == false
+          return if key.start_with?('io_secrets::') == false
           return self.method(@lookup_backend).call(key, scope)
         end
         
@@ -40,8 +44,8 @@ class Hiera
         end
         
         def lookup_test(key,scope)
-          Hiera.debug("Hiera IO Secrets - test vault, always returns test")
-          return 'test'
+          Hiera.debug("Hiera IO Secrets - test vault, always returns 'pass'")
+          return 'pass'
         end
 
         def validate_bw()
@@ -55,7 +59,7 @@ class Hiera
             raise Exception, "[hiera-io_secrets][bw] bw is not logged in"
           end
           unless system("bw unlock --check > /dev/null")
-            raise Exception, "[hiera-io_secrets][bw] bw is not unlock, verify BW_SESSION is exported"
+            raise Exception, "[hiera-io_secrets][bw] bw is not unlocked, verify BW_SESSION is exported"
           end
           unless system("bw sync > /dev/null")
             raise Exception, "[hiera-io_secrets][bw] bw had an issue syncing"
