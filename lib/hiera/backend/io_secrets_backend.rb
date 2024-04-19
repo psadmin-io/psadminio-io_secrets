@@ -49,9 +49,6 @@ class Hiera
         end
 
         def validate_bw()
-          unless system("which jq > /dev/null")
-            raise Exception, "[hiera-io_secrets][bw] jq was not found in PATH"
-          end
           unless system("which bw > /dev/null")
             raise Exception, "[hiera-io_secrets][bw] Bitwarden CLI (bw) was not found in PATH"
           end
@@ -82,13 +79,17 @@ class Hiera
           #  group_toggle = "--folderid #{group_id}"
           #end
 
-          # TODO - replace jq with Ruby JSON parsing? Otherwise we have to do multiple calls, since piping was having an issue...
-          #secret_value = `bw list items --search #{secret_name} #{group_toggle} | jq -r .[].login.password`
           Hiera.debug("Secret Name: #{secret_name}")
-          secret_json = `bw list items --search #{secret_name} #{group_toggle}`
-          secret_value = `echo '#{secret_json}' | jq -r .[].login.password`
-          #Hiera.debug("Secret Value: #{secret_value}")
-          return if secret_value.empty?# TODO?
+          bw_json = JSON.parse(`bw list items --search #{secret_name} #{group_toggle}`)
+          
+          if bw_json.size == 1
+            secret_value = bw_json[0]["login"]["password"]
+            #Hiera.debug("Secret Value: #{secret_value}")
+          elsif bw_json.size > 1
+            raise Exception, "[hiera-io_secrets] multiple secrets were found, secret name '#{secret_name}' not unique in vault"
+          else
+            return # no secret found
+          end
   
           Hiera.debug("Found #{key} in group #{@config[:group]} in IO Secrets bw")
           answer = Backend.parse_answer(secret_value, scope, {})
