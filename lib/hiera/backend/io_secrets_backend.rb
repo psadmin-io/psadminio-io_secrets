@@ -1,35 +1,38 @@
 class Hiera
     module Backend
       class Io_secrets_backend
-  
         def initialize
-          Hiera.debug("Hiera IO Secrets backend starting")
-          
           require 'json'          
+          
+          Hiera.debug("Hiera IO Secrets backend starting")
 
-          #unless Config[:io_secrets]
-          #  raise Exception, "[hiera-io_secrets] there was an issue finding :io_secrets config in hiera.yaml"
-          #end
+          # TODO wrap this in a rescure catch instead?
+          unless Config[:io_secrets]
+            raise Exception, "[hiera-io_secrets] there was an issue finding :io_secrets config in hiera.yaml"
+          end
 
           @config = Config[:io_secrets]
           @config[:vault] ||= 'none' # bw, oci, test
-          @config[:id] ||= 'none' # ocid, etc
-          @config[:group_fact] ||= 'none'  # folder or other grouping, normally at Env level
-          @config[:prefix_fact] ||= 'none' # string in front of secret name, normally at Env level
-          @config[:suffix_fact] ||= 'none' # string at end of secret name, normally at Env level
+          Hiera.debug("Hiera IO Secrets - config[:vault] = #{@config[:vault]}")
 
           # Lookup facts
-          @config[:group] = facter_lookup(@config[:group_fact])
-          @config[:prefix] = facter_lookup(@config[:prefix_fact])
-          @config[:suffix] = facter_lookup(@config[:suffix_fact])
+          unless @config[:group_fact].nil? 
+            Hiera.debug("Hiera IO Secrets - config[:group_fact] = #{@config[:group_fact]}")
+            @group = Facter.value(@config[:group_fact]) || raise("[hiera-io_secrets] fact '#{@config[:group_fact]}' was not found")
+            Hiera.debug("Hiera IO Secrets - group = #{@group}")
+          end
+          unless @config[:prefix_fact].nil? 
+            Hiera.debug("Hiera IO Secrets - config[:prefix_fact] = #{@config[:prefix_fact]}")
+            @prefix = Facter.value(@config[:prefix_fact]) || raise("[hiera-io_secrets] fact '#{@config[:prefix_fact]}' was not found")
+            Hiera.debug("Hiera IO Secrets - prefix = #{@prefix}")
+          end
+          unless @config[:suffix_fact].nil? 
+            Hiera.debug("Hiera IO Secrets - config[:suffix_fact] = #{@config[:suffix_fact]}")
+            @suffix = Facter.value(@config[:suffix_fact]) || raise("[hiera-io_secrets] fact '#{@config[:suffix_fact]}' was not found")
+            Hiera.debug("Hiera IO Secrets - suffix = #{@suffix}")
+          end
 
-          # Debug Config
-          Hiera.debug("Hiera IO Secrets - config[:vault] = #{@config[:vault]}")
-          Hiera.debug("Hiera IO Secrets - config[:id] = #{@config[:id]}")
-          Hiera.debug("Hiera IO Secrets - config[:group] = #{@config[:group]}")
-          Hiera.debug("Hiera IO Secrets - config[:prefix] = #{@config[:prefix]}")
-          Hiera.debug("Hiera IO Secrets - config[:suffix] = #{@config[:suffix]}")
-
+          # Validate and set lookup for vault type
           case @config[:vault]
           when 'test'
             @lookup_backend = "lookup_test"
@@ -41,29 +44,11 @@ class Hiera
           else
             @lookup_backend = "lookup_none"
           end
-
-          if false
-            raise Exception, "[hiera-io_secrets] some exception TODO '#{@config[:vault]}'"
-          end
         end
-
-        def facter_lookup(fact)
-          unless fact == 'none'
-            result = Facter.value(fact)
-            
-            if result.nil?
-              raise Exception, "[hiera-io_secrets] fact '#{fact}' was not found"
-            end
-           
-            return result
-          else
-            return 'none'           
-          end
-        end
-  
+ 
         def lookup(key, scope, order_override, resolution_type)
-          return if key.start_with?('io_secrets::') == false
-          return self.method(@lookup_backend).call(key, scope)
+          return if key.start_with?('io_secrets::') == false   # skip if not an `io_secrets` key
+          return self.method(@lookup_backend).call(key, scope) # lookup method based on vualt type
         end
         
         def lookup_none(key,scope)
@@ -97,10 +82,10 @@ class Hiera
  
           # Group Lookup
           Hiera.debug("Looking up #{key} in IO Secrets bw")
-          if @config[:group] == 'none'
+          if @group.nil?
             group_toggle = "" # skip group criteria if not set in config
 	  else
-            bw_json = JSON.parse(`bw list folders --search #{@config[:group]}`)
+            bw_json = JSON.parse(`bw list folders --search #{@group}`)
             if bw_json.size == 1
               group_id = bw_json[0]["id"]
               Hiera.debug("Group ID: #{group_id}")
@@ -115,14 +100,8 @@ class Hiera
           # Secret Name Prep
           secret_name = key.dup
           secret_name.slice! "io_secrets::"
-     
-          unless @config[:prefix] == 'none'
-            secret_name = @config[:prefix] + secret_name 
-          end
-          
-          unless @config[:suffix] == 'none'
-            secret_name = secret_name + @config[:suffix] 
-          end
+          secret_name = @prefix + secret_name unless @prefix.nil?
+          secret_name = secret_name + @suffix unless @suffix.nil?
 
           # Secret Lookup
           Hiera.debug("Secret Name: #{secret_name}")
@@ -137,7 +116,7 @@ class Hiera
             return # no secret found
           end
   
-          Hiera.debug("Found #{key} in group #{@config[:group]} in IO Secrets bw")
+          Hiera.debug("Found #{key} in IO Secrets bw")
           answer = Backend.parse_answer(secret_value, scope, {})
 
           return answer
