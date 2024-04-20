@@ -1,7 +1,6 @@
-class io_portalwar::params {
+class io_secrets::params {
   $ensure                    = 'present'
-#  $psvault            = undef
+  $psvault                   = true
 #  $pia_domain_list           = hiera_hash('pia_domain_list')
-
 }
 
