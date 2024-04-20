@@ -89,14 +89,6 @@ class io_portalwar::psvault (
       path     => [ '/usr/bin', '/bin', '/usr/sbin' ],
       #require => TODO - require jdk install?      
     }
-
-    # PS_HOME/setup/PsMpWebAppDeployInstall does not exist in PT8.59.15 ?? TODO
-    # $pshome_setup_webapp  = "${ps_home_location}/setup/PsMpWebAppDeployInstall/archives/psvault"
-    # file {"Deploy psvault to PS_HOME/setup/webapp":
-
-    # $pshome_setup_webapp_jar  = "${ps_home_location}/setup/PsMpWebAppDeployInstall/archives/WLPeopleSoft.jar"
-    # exec { "Deploy psvault to PS_HOME/setup/webapp/jar":
-
   } #End Deploy a custom psvault 
 }
 
