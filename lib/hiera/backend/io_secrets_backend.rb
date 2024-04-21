@@ -132,9 +132,9 @@ class Hiera
           unless system("which oci > /dev/null")
             raise Exception, "[hiera-io_secrets][oci] OCI CLI (oci) was not found in PATH"
           end
-         # unless system("bw login --check > /dev/null")
-         #   raise Exception, "[hiera-io_secrets][bw] TODO OCI creds"
-         # end
+          unless system(" oci iam compartment list > /dev/null")
+            raise Exception, "[hiera-io_secrets][oci] basic compartment query failed, oci config is likely incorrect"
+          end
          # unless system("bw unlock --check > /dev/null")
          #   raise Exception, "[hiera-io_secrets][bw] TODO creds for vault"
          # end
