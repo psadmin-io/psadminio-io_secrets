@@ -7,35 +7,19 @@ class Hiera
           Hiera.debug("Hiera IO Secrets backend starting")
 
           # TODO wrap this in a rescure catch instead?
-          unless Config[:io_secrets]
-            raise Exception, "[hiera-io_secrets] there was an issue finding :io_secrets config in hiera.yaml"
-          end
-
-          @config = Config[:io_secrets]
-          @config[:vault] ||= 'none' # bw, oci, test
-          Hiera.debug("Hiera IO Secrets - config[:vault] = #{@config[:vault]}")
+          # Lookup config
+          @vault = Config[:io_secrets::vault] || raise("[hiera-io_secrets] there was an issue finding :io_secrets config in hiera.yaml")
+          Hiera.debug("Hiera IO Secrets - vault = #{@vault}")
 
           # Lookup facts
-          unless @config[:id_fact].nil? 
-            Hiera.debug("Hiera IO Secrets - config[:id_fact] = #{@config[:id_fact]}")
-            @id = Facter.value(@config[:id_fact]) || raise("[hiera-io_secrets] fact '#{@config[:id_fact]}' was not found")
-            Hiera.debug("Hiera IO Secrets - id = #{@id}")
-          end
-          unless @config[:group_fact].nil? 
-            Hiera.debug("Hiera IO Secrets - config[:group_fact] = #{@config[:group_fact]}")
-            @group = Facter.value(@config[:group_fact]) || raise("[hiera-io_secrets] fact '#{@config[:group_fact]}' was not found")
-            Hiera.debug("Hiera IO Secrets - group = #{@group}")
-          end
-          unless @config[:prefix_fact].nil? 
-            Hiera.debug("Hiera IO Secrets - config[:prefix_fact] = #{@config[:prefix_fact]}")
-            @prefix = Facter.value(@config[:prefix_fact]) || raise("[hiera-io_secrets] fact '#{@config[:prefix_fact]}' was not found")
-            Hiera.debug("Hiera IO Secrets - prefix = #{@prefix}")
-          end
-          unless @config[:suffix_fact].nil? 
-            Hiera.debug("Hiera IO Secrets - config[:suffix_fact] = #{@config[:suffix_fact]}")
-            @suffix = Facter.value(@config[:suffix_fact]) || raise("[hiera-io_secrets] fact '#{@config[:suffix_fact]}' was not found")
-            Hiera.debug("Hiera IO Secrets - suffix = #{@suffix}")
-          end
+          @id = Facter.value('io_secrets_id') || raise("[hiera-io_secrets] fact 'io_secrets_id' was not found")
+          Hiera.debug("Hiera IO Secrets - id = #{@id}")
+          @group = Facter.value(@config[:group_fact]) || raise("[hiera-io_secrets] fact 'io_secrets_group' was not found")
+          Hiera.debug("Hiera IO Secrets - group = #{@group}")
+          @prefix = Facter.value(@config[:prefix_fact]) || raise("[hiera-io_secrets] fact 'io_secrets_prefix' was not found")
+          Hiera.debug("Hiera IO Secrets - prefix = #{@prefix}")
+          @suffix = Facter.value(@config[:suffix_fact]) || raise("[hiera-io_secrets] fact 'io_descrets_suffix' was not found")
+          Hiera.debug("Hiera IO Secrets - suffix = #{@suffix}")
 
           # Validate and set lookup for vault type
           case @config[:vault]
