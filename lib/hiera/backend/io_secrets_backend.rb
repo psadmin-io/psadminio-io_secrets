@@ -132,12 +132,13 @@ class Hiera
           unless system("which oci > /dev/null")
             raise Exception, "[hiera-io_secrets][oci] OCI CLI (oci) was not found in PATH"
           end
-          unless system(" oci iam compartment list > /dev/null")
+          unless system("oci iam compartment list > /dev/null")
             raise Exception, "[hiera-io_secrets][oci] basic compartment query failed, oci config is likely incorrect"
           end
-         # unless system("bw unlock --check > /dev/null")
-         #   raise Exception, "[hiera-io_secrets][bw] TODO creds for vault"
-         # end
+          #TODO if this returns no secrets, then fail validation
+          # unless JSON.parse(system("oci vault secret list --compartment-id #{@group}")).size > 0
+          #  raise Exception, "[hiera-io_secrets][oci] issue finding secrets in vaults in group(compartment)"
+          #end
         end
 
        def lookup_oci(key, scope)
@@ -152,29 +153,29 @@ class Hiera
           # TODO out in a rescure clause around all this?
       
           # Group Lookup
-          Hiera.debug("Looking up #{key} in IO Secrets bw")
-          if @group.nil?
-            group_toggle = "" # skip group criteria if not set in config
-	  else
-            bw_json = JSON.parse(`bw list folders --search #{@group}`)
-            if bw_json.size == 1
-              group_id = bw_json[0]["id"]
-              Hiera.debug("Group ID: #{group_id}")
-              group_toggle = "--folderid #{group_id}"
-            elsif bw_json.size > 1
-              raise Exception, "[hiera-io_secrets] multiple groups were found, group name '#{@config[:group]}' not unique in vault"
-            else
-              raise Exception, "[hiera-io_secrets] no '#{@config[:group]}' group was found in vault"
-            end
-          end
+          Hiera.debug("Looking up #{key} in IO Secrets oci")
+          #if @group.nil?
+          #  group_toggle = "" # skip group criteria if not set in config
+	  #else
+          #  bw_json = JSON.parse(`bw list folders --search #{@group}`)
+          #  if bw_json.size == 1
+          #    group_id = bw_json[0]["id"]
+          #    Hiera.debug("Group ID: #{group_id}")
+          #    group_toggle = "--folderid #{group_id}"
+          #  elsif bw_json.size > 1
+          #    raise Exception, "[hiera-io_secrets] multiple groups were found, group name '#{@config[:group]}' not unique in vault"
+          #  else
+          #    raise Exception, "[hiera-io_secrets] no '#{@config[:group]}' group was found in vault"
+          #  end
+          #end
 
           # Secret Name Prep
-          secret_name = key.dup
-          secret_name.slice! "io_secrets::"
-          secret_name = @prefix + secret_name unless @prefix.nil?
-          secret_name = secret_name + @suffix unless @suffix.nil?
+          #secret_name = key.dup
+          #secret_name.slice! "io_secrets::"
+          #secret_name = @prefix + secret_name unless @prefix.nil?
+          #secret_name = secret_name + @suffix unless @suffix.nil?
 
-          oci_vault_ocid = Facter.value(:oci_vault_ocid)
+          #oci_vault_ocid = Facter.value(:oci_vault_ocid)
           Hiera.debug("OCI Value OCID: #{oci_vault_ocid}")
 
           ocicli = `oci secrets secret-bundle get-secret-bundle-by-name \
