@@ -60,12 +60,14 @@ FACTER_io_secrets_group=FSDEV puppet apply ...
 
 ### Bitwarden Setup
 To use Bitwarden or Vaultwarden as a vault backend, this module assumes you have `bw` installed, logged in and unlocked.
-If this is not the case with `puppet apply` is run, it will throw an exception.
+If this is not the case when `puppet apply` is run, it will throw an exception.
 
 ```
 # install bw
 cd ~/bin
-wget "https://vault.bitwarden.com/download/?app=cli&platform=linux" -o bw.zip
+wget "https://vault.bitwarden.com/download/?app=cli&platform=linux" -O bw.zip
+unzip bw.zip
+rm -f bw.zip
 
 # login and unlock
 export NODE_EXTRA_CA_CERTS=/var/lib/containers/vault/certs/cert.pem # needed if using self-signed certs
