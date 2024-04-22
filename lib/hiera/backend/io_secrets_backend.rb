@@ -6,9 +6,9 @@ class Hiera
           
           Hiera.debug("Hiera IO Secrets backend starting")
 
-          # TODO wrap this in a rescure catch instead?
           # Lookup config
-          @vault = Config[:io_secrets::vault] || raise("[hiera-io_secrets] there was an issue finding :io_secrets config in hiera.yaml")
+          @config = Config[:io_secrets] || raise("[hiera-io_secrets] there was an issue finding :io_secrets config in hiera.yaml")
+          @vault = @config[:vault]
           Hiera.debug("Hiera IO Secrets - vault = #{@vault}")
 
           # Lookup facts
@@ -18,7 +18,7 @@ class Hiera
           Hiera.debug("Hiera IO Secrets - group = #{@group}")
           @prefix = Facter.value(@config[:prefix_fact]) || raise("[hiera-io_secrets] fact 'io_secrets_prefix' was not found")
           Hiera.debug("Hiera IO Secrets - prefix = #{@prefix}")
-          @suffix = Facter.value(@config[:suffix_fact]) || raise("[hiera-io_secrets] fact 'io_descrets_suffix' was not found")
+          @suffix = Facter.value(@config[:suffix_fact]) || raise("[hiera-io_secrets] fact 'io_secrets_suffix' was not found")
           Hiera.debug("Hiera IO Secrets - suffix = #{@suffix}")
 
           # Validate and set lookup for vault type
@@ -72,7 +72,7 @@ class Hiera
  
           # Group Lookup
           Hiera.debug("Looking up #{key} in IO Secrets bw")
-          if @group.nil?
+          if @group == 'none'
             group_toggle = "" # skip group criteria if not set in config
 	  else
             bw_json = JSON.parse(`bw list folders --search #{@group}`)
@@ -90,8 +90,8 @@ class Hiera
           # Secret Name Prep
           secret_name = key.dup
           secret_name.slice! "io_secrets::"
-          secret_name = @prefix + secret_name unless @prefix.nil?
-          secret_name = secret_name + @suffix unless @suffix.nil?
+          secret_name = @prefix + secret_name unless @prefix == 'none'
+          secret_name = secret_name + @suffix unless @suffix == 'none'
 
           # Secret Lookup
           Hiera.debug("Secret Name: #{secret_name}")

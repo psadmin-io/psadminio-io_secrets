@@ -24,6 +24,3 @@
 
 :io_secrets:
   :vault:   'bw' 
-  :group:   'io_secrets_group'
-#  :prefix:  'io_secrets_prefix'
-#  :suffix:  'io_secrets_suffix'
