@@ -14,11 +14,11 @@ class Hiera
           # Lookup facts
           @id = Facter.value('io_secrets_id') || raise("[hiera-io_secrets] fact 'io_secrets_id' was not found")
           Hiera.debug("Hiera IO Secrets - id = #{@id}")
-          @group = Facter.value(@config[:group_fact]) || raise("[hiera-io_secrets] fact 'io_secrets_group' was not found")
+          @group = Facter.value('io_secrets_group') || raise("[hiera-io_secrets] fact 'io_secrets_group' was not found")
           Hiera.debug("Hiera IO Secrets - group = #{@group}")
-          @prefix = Facter.value(@config[:prefix_fact]) || raise("[hiera-io_secrets] fact 'io_secrets_prefix' was not found")
+          @prefix = Facter.value('io_secrets_prefix') || raise("[hiera-io_secrets] fact 'io_secrets_prefix' was not found")
           Hiera.debug("Hiera IO Secrets - prefix = #{@prefix}")
-          @suffix = Facter.value(@config[:suffix_fact]) || raise("[hiera-io_secrets] fact 'io_secrets_suffix' was not found")
+          @suffix = Facter.value('io_secrets_suffix') || raise("[hiera-io_secrets] fact 'io_secrets_suffix' was not found")
           Hiera.debug("Hiera IO Secrets - suffix = #{@suffix}")
 
           # Validate and set lookup for vault type
