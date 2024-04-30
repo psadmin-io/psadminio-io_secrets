@@ -82,7 +82,7 @@ TODO
 ## Usage
 
 ### Vault Backend
-Use variables in your DPK data that match this pattern `io_secrets::secret_name`. 
+Use variables in your DPK data that match this pattern `::io_secrets::secret_name`. 
 In this example, the backend will look in the vault for a secret with the name `secret_name`.
 
 Secrets in vaults can be organized in different ways. This backend deals with organization via configuration facts.
@@ -94,14 +94,14 @@ Secrets in vaults can be organized in different ways. This backend deals with or
     * all - value is added to the front of a secret name. 
         ```
         io_secrets_prefix="IODEV - "
-        io_secrets::secret_name
+        ::io_secrets::secret_name
         lookup = 'FSDEV - secret_name'
         ```
 * `io_secrets_suffix`
     * all - value is added to the end of a secret name. 
         ```
         io_secrets_prefix=" - IODEV"
-        io_secrets::secret_name
+        ::io_secrets::secret_name
         lookup = 'secret_name - IODEV'
         ```
 

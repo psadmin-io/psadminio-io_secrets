@@ -37,7 +37,7 @@ class Hiera
         end
  
         def lookup(key, scope, order_override, resolution_type)
-          return if key.start_with?('io_secrets::') == false   # skip if not an `io_secrets` key
+          return if key.start_with?('::io_secrets::') == false   # skip if not an `io_secrets` key
           return self.method(@lookup_backend).call(key, scope) # lookup method based on vualt type
         end
         
@@ -68,7 +68,6 @@ class Hiera
 
         def lookup_bw(key, scope)
           answer = nil          
-          return if key.start_with?('io_secrets::') == false
  
           # Group Lookup
           Hiera.debug("Looking up #{key} in IO Secrets bw")
@@ -89,7 +88,7 @@ class Hiera
 
           # Secret Name Prep
           secret_name = key.dup
-          secret_name.slice! "io_secrets::"
+          secret_name.slice! "::io_secrets::"
           secret_name = @prefix + secret_name unless @prefix == 'none'
           secret_name = secret_name + @suffix unless @suffix == 'none'
 
@@ -127,10 +126,9 @@ class Hiera
 
        def lookup_oci(key, scope)
           answer = nil
-          return if key.start_with?('io_secrets::') == false
 
           secret = key.dup
-          secret.slice! "io_secrets::"
+          secret.slice! "::io_secrets::"
 
           Hiera.debug("Looking up #{key} in IO Secrets oci")
 
@@ -155,7 +153,7 @@ class Hiera
 
           # Secret Name Prep
           #secret_name = key.dup
-          #secret_name.slice! "io_secrets::"
+          #secret_name.slice! "::io_secrets::"
           #secret_name = @prefix + secret_name unless @prefix.nil?
           #secret_name = secret_name + @suffix unless @suffix.nil?
 
