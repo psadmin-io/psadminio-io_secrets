@@ -23,9 +23,10 @@ currentPath="$( cd "$(dirname "$0")" && pwd )"
 #TODO source ${currentPath%${currentPath#*scripts*/}}library/bootstrap.sh
 
 # load needed libraries
+LIB_HOME=/u01/app/psoft/dpk/puppet/production/modules/io_secrets/files
 #source $LIB_HOME/inventory.sh
 #source $LIB_HOME/utilities.sh
-#source $LIB_HOME/security.sh
+source $LIB_HOME/vault.sh
 
 env=""
 userId=""
@@ -118,35 +119,32 @@ else
   newUserPass="$PS_USER_PWD"
 fi
 
-echo
-
 # Lookup security admin user and pass
 changeUserName="VP1"
-#TODO sec::getGenSecurity "psoft_pass.apppoweruser.pt${toolsVersion}.pass" changeUserPass
-
-echo
+vault::getEnvSecret $env 'sec_admin' changeUserPass
 
 #TODO   util::log "INFO" "Starting password change process for ${env}'s $userId"
 
 # apply password change
 
 # Setup DMS script
-configFile="/psoft/admin/tmp/.dmxcfg${currentDate}.txt"
-scriptFile="/psoft/admin/tmp/.accessid${currentDate}.dms"
+# TODO
+configFile="$PS_SCRIPT_BASE/.dmxcfg${currentDate}.txti"
+scriptFile="$PS_SCRIPT_BASE/.accessid${currentDate}.dms"
 echo "update PSOPRDEFN set PTOPERPSWDV2 = '$newUserPass', OPERPSWDSALT = ' ', OPERPSWD = ' ', ENCRYPTED = 0 where OPRID = '$userId';" > $scriptFile
 echo "ENCRYPT_PASSWORD $userId;" >> $scriptFile
 
 # Setup DMS config
 cat <<EOT > $configFile
 -CT ORACLE
--CD ${eachApp^^}${env^^}
+-CD "${PS_DBNAME?}"
 -CO "$changeUserName"
 -CP "$changeUserPass"
 -FP $scriptFile
 EOT
 
 # Run DMS
-PS_SERVER_CFG=$PS_CFG_HOME/appserv/prcs/PRCSDOM/psprcs.cfg psdmtx $configFile
+dmsResult=$(PS_SERVER_CFG=$PS_CFG_HOME/appserv/prcs/PRCSDOM/psprcs.cfg psdmtx $configFile)
 dmsExitCode=$?
 # DMX will auto delete the config file, but script needs to be cleared
 rm $scriptFile
@@ -158,6 +156,7 @@ fi
 # Check for errors
 if [[ "$dmsResult" == *"Successful completion"* ]]; then
    #util::log "INFO" "DMS Change User Password Successful in $eachApp$env."
+   echo "GOOD"
 else
    #util::log "ERROR" "Failed to run DMS Change User Password, aborting, Results:  $dmsResult"
    echo "ERROR"
