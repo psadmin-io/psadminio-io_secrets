@@ -1,18 +1,17 @@
 # io_secrets::psvault
 #
-# TODO
+# Deploy prebuilt psvault
 #
-# TODO 
-# TODO
+# @summary This class will deploy a prebuilt psvault
 #
 # @example
 #   include io_secrets::psvault
 class io_secrets::psvault (
   $ensure                 = $io_secrets::ensure,
-  $ps_home_location       = hiera('ps_home_location'),
-  $prebuilt_psvault       = '/u01/app/psoft/cust/secvault/psvault', # hiera('prebuilt_psvault'),
-  $jdk_location           = '/u01/app/psoft/pt/jdk', # TODO
-) {
+  $ps_home_location       = $io_secrets::ps_home_location,
+  $prebuilt_psvault       = $io_secrets::prebuilt_psvault,
+  $jdk_location           = $io_secrets::jdk_location,
+) inherits io_secrets {
 
   notify { "io_secrets::psvault": }
   
@@ -26,7 +25,7 @@ class io_secrets::psvault (
   }
 
   # Deploy a custom psvault into the deployed ps_home_location  
-  if (true) { # TODO
+  if (true) { 
     notice("Deploying prebuilt psvault from $prebuilt_psvault")
 
     # PS_HOME/secvault
@@ -35,7 +34,7 @@ class io_secrets::psvault (
     file {"Deploy psvault to PS_HOME/secvault":
       ensure => present,
       path   => "${pshome_secvault}",
-      source => "${prebuilt_psvault}", # TODO /piaconfig/properties/psvault",
+      source => "${prebuilt_psvault}/piaconfig/properties/psvault",
     }
 
     # PS_HOME/setup/PsMpPIAInstall/archives
@@ -44,7 +43,7 @@ class io_secrets::psvault (
     file {"Deploy psvault to PS_HOME/setup/pia":
       ensure => present,
       path   => "${pshome_setup_pia}",
-      source => "${prebuilt_psvault}", #/piaconfig/properties/psvault",
+      source => "${prebuilt_psvault}/piaconfig/properties/psvault",
     }
 
     # PS_HOME/setup/PsMpPIAInstall/archives/WLPeopleSoft.jar
@@ -54,10 +53,9 @@ class io_secrets::psvault (
     exec { "Deploy psvault to PS_HOME/setup/pia/jar":
       # set current wrk dir to base psvault location, then pack in jar
       # packing from base location will give directory structure needed in jar
-      cwd      => "/u01/app/psoft/cust/secvault", #TODO ${prebuilt_psvault}",
-      command  => "${jdk_location}/bin/jar uf ${pshome_setup_pia_jar} piaconfig/properties/psvault", # TODO
+      cwd      => "${prebuilt_psvault}",
+      command  => "${jdk_location}/bin/jar uf ${pshome_setup_pia_jar} piaconfig/properties/psvault",
       path     => [ '/usr/bin', '/bin', '/usr/sbin' ],
-      #require => TODO - require jdk install?      
     }
   } 
 }
