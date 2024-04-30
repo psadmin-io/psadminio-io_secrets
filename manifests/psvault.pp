@@ -7,10 +7,12 @@
 # @example
 #   include io_secrets::psvault
 class io_secrets::psvault (
-  $ensure                 = $io_secrets::ensure,
-  $ps_home_location       = $io_secrets::ps_home_location,
-  $prebuilt_psvault       = $io_secrets::prebuilt_psvault,
-  $jdk_location           = $io_secrets::jdk_location,
+  $ensure                     = $io_secrets::ensure,
+  $ps_home_location           = $io_secrets::ps_home_location,
+  $prebuilt_psvault           = $io_secrets::prebuilt_psvault,
+  $jdk_location               = $io_secrets::jdk_location,
+  $psft_install_user_name     = $io_secrets::psft_install_user_name,
+  $oracle_install_igroup_name = $io_secrets::oracle_install_group_name,
 ) inherits io_secrets {
 
   notify { "io_secrets::psvault": }
@@ -19,9 +21,9 @@ class io_secrets::psvault (
     ensure  => file,
     path    => "${ps_home_location}/io_secrets.md",
     content => template('io_secrets/io_secrets.md.erb'),
-    #owner   => $psft_runtime_user_name,
-    #group   => $psft_runtime_group_name,
-    #mode    => '0644',
+    owner   => $psft_install_user_name,
+    group   => $oracle_install_group_name,
+    mode    => '0644',
   }
 
   # Deploy a custom psvault into the deployed ps_home_location  
@@ -35,6 +37,9 @@ class io_secrets::psvault (
       ensure => present,
       path   => "${pshome_secvault}",
       source => "${prebuilt_psvault}/piaconfig/properties/psvault",
+      owner   => $psft_install_user_name,
+      group   => $oracle_install_group_name,
+      mode    => '0644',
     }
 
     # PS_HOME/setup/PsMpPIAInstall/archives
@@ -44,6 +49,9 @@ class io_secrets::psvault (
       ensure => present,
       path   => "${pshome_setup_pia}",
       source => "${prebuilt_psvault}/piaconfig/properties/psvault",
+      owner   => $psft_install_user_name,
+      group   => $oracle_install_group_name,
+      mode    => '0644',
     }
 
     # PS_HOME/setup/PsMpPIAInstall/archives/WLPeopleSoft.jar
