@@ -136,7 +136,7 @@ fi
 
 # Check for errors
 if [[ "$dmsResult" == *"Successful completion"* ]]; then
-   echo "INFO - DMS Change User Password Successful for $name in $env."
+   echo "INFO - DMS Change User Password Successful for $userId in $env"
 else
    echo "ERROR - Failed to run DMS Change User Password, aborting, Results:  $dmsResult"
    exit 1
