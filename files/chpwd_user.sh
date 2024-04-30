@@ -18,14 +18,10 @@
 ##
 ################################################################################
 
-# load bootstrap dynamic path
 currentPath="$( cd "$(dirname "$0")" && pwd )"
-#TODO source ${currentPath%${currentPath#*scripts*/}}library/bootstrap.sh
 
 # load needed libraries
 LIB_HOME=/u01/app/psoft/dpk/puppet/production/modules/io_secrets/files
-#source $LIB_HOME/inventory.sh
-#source $LIB_HOME/utilities.sh
 source $LIB_HOME/vault.sh
 
 env=""
@@ -48,7 +44,6 @@ function usageInfo()
    #echo "   will change how other passwords are changed due to this use dependency!"
    #echo
    exit
-
 }
 
 ######## Main program
@@ -81,25 +76,15 @@ while getopts ":ha:e:u:t:" optname; do
 done
 
 # verifiy required fields
-if [[ -z "$env" ]]; then
-  echo "Environment is required."
+if [[ -z "$env" || -z "$userId" ]]; then
+  echo "Environment and User Id are required."
   usageInfo
 fi
 
 # setup log file for process
 currentDate="$(date +%y%m%d_%H%M )"
-PS_SCRIPT_BASE=/tmp # TODO
-passLogFile="$PS_SCRIPT_BASE/logs/changeUserPassword_${app}_${env}_${userId}_$currentDate.log"
-#util::setLogFile "$passLogFile"
-
-# Setup Vault access
-# TODO
-#export ANSIBLE_LOG_PATH=/dev/null
-#sec::getandStoreVaultAccess
-#if [[ $? -ne 0 ]]; then
-#  util::log "ERROR" "Unable to setup vault access"
-#  exit 1
-#fi
+PS_SCRIPT_BASE=/tmp
+passLogFile="$PS_SCRIPT_BASE/changeUserPassword_${app}_${env}_${userId}_$currentDate.log"
 
 # check if passed in with env variable
 if [ -z "$PS_USER_PWD" ]; then
@@ -120,15 +105,12 @@ else
 fi
 
 # Lookup security admin user and pass
-changeUserName="VP1"
+changeUserName="VP1" # TODO
 vault::getEnvSecret $env 'sec_admin' changeUserPass
 
-#TODO   util::log "INFO" "Starting password change process for ${env}'s $userId"
-
-# apply password change
+echo "INFO - Starting password change process for ${env}'s $userId"
 
 # Setup DMS script
-# TODO
 configFile="$PS_SCRIPT_BASE/.dmxcfg${currentDate}.txti"
 scriptFile="$PS_SCRIPT_BASE/.accessid${currentDate}.dms"
 echo "update PSOPRDEFN set PTOPERPSWDV2 = '$newUserPass', OPERPSWDSALT = ' ', OPERPSWD = ' ', ENCRYPTED = 0 where OPRID = '$userId';" > $scriptFile
@@ -152,16 +134,10 @@ if [ -e $configFile ]; then
    rm $configFile
 fi
 
-#util::log "DEBUG" "DMS Exit Code: $dmsExitCode, Result: $dmsResult"
 # Check for errors
 if [[ "$dmsResult" == *"Successful completion"* ]]; then
-   #util::log "INFO" "DMS Change User Password Successful in $eachApp$env."
-   echo "GOOD"
+   echo "INFO - DMS Change User Password Successful for $name in $env."
 else
-   #util::log "ERROR" "Failed to run DMS Change User Password, aborting, Results:  $dmsResult"
-   echo "ERROR"
+   echo "ERROR - Failed to run DMS Change User Password, aborting, Results:  $dmsResult"
    exit 1
 fi
-
-# util::log "INFO" "Make sure to update vault with new password"
-#END
