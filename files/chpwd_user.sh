@@ -111,7 +111,7 @@ vault::getEnvSecret $env 'sec_admin' changeUserPass
 echo "INFO - Starting password change process for ${env}'s $userId"
 
 # Setup DMS script
-configFile="$PS_SCRIPT_BASE/.dmxcfg${currentDate}.txti"
+configFile="$PS_SCRIPT_BASE/.dmxcfg${currentDate}.txt"
 scriptFile="$PS_SCRIPT_BASE/.accessid${currentDate}.dms"
 echo "update PSOPRDEFN set PTOPERPSWDV2 = '$newUserPass', OPERPSWDSALT = ' ', OPERPSWD = ' ', ENCRYPTED = 0 where OPRID = '$userId';" > $scriptFile
 echo "ENCRYPT_PASSWORD $userId;" >> $scriptFile
