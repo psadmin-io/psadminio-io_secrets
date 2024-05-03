@@ -32,17 +32,13 @@ function usageInfo()
 {
    echo "Usage:"
    echo "  chpwd_user.sh -e <env> -u <userId>"
-   echo "     Change a PeopleSoft UserId's password and update vault"
-   echo "     To script, pass the userid password in env variable PS_USER_PWD"
+   echo "     Change a PeopleSoft UserId's password to match vault"
    echo "     -e <env>  : (Required) Env"
    echo "     -u <userId>: (Required) UserId to change password"
    echo "     -h               : Display this help"
    echo
-   echo " This will prompt for the new password unless the new password is set in the "
-   echo "   environment variable 'PS_USER_PWD'"
-   #TODO echo " FYI: The user 'PS' is used to access Peoplesoft to change passwords, changing PS"
-   #echo "   will change how other passwords are changed due to this use dependency!"
-   #echo
+   echo " This will pull the password from vault,using <env> as folder and <userId> as item name."
+   echo " FYI: The `<env>:sec_admin` item from vault is used to access Peoplesoft to change passwords."
    exit
 }
 
@@ -86,34 +82,23 @@ currentDate="$(date +%y%m%d_%H%M )"
 PS_SCRIPT_BASE=/tmp
 passLogFile="$PS_SCRIPT_BASE/changeUserPassword_${app}_${env}_${userId}_$currentDate.log"
 
-# check if passed in with env variable
-if [ -z "$PS_USER_PWD" ]; then
-  echo -n "Enter new $app$env $userId Password:"
-  read -s newUserPass
-  echo
-  echo -n "Re-Enter new $app$env $userId Password:"
-  read -s newUserPass2
-  echo
-
-  if [[ "$newUserPass" != "$newUserPass2" ]]; then
-    echo "Password does not match!"
-    exit 1
-  fi
-else
-  # Use password stored in env var
-  newUserPass="$PS_USER_PWD"
-fi
-
 # Lookup security admin user and pass
-changeUserName="VP1" # TODO
+vault::getEnvUsername $env 'sec_admin' changeUserName
 vault::getEnvSecret $env 'sec_admin' changeUserPass
+
+# Lookup new password
+vault::getEnvSecret $env "$userId" vaultPassword
+if [ -z "$vaultPassword" ]; then
+    echo "Error finding password in vault"
+    exit 1
+fi
 
 echo "INFO - Starting password change process for ${env}'s $userId"
 
 # Setup DMS script
-configFile="$PS_SCRIPT_BASE/.dmxcfg${currentDate}.txt"
+configFile="$PS_SCRIPT_BASE/.dmxcfg${currentDate}.txti"
 scriptFile="$PS_SCRIPT_BASE/.accessid${currentDate}.dms"
-echo "update PSOPRDEFN set PTOPERPSWDV2 = '$newUserPass', OPERPSWDSALT = ' ', OPERPSWD = ' ', ENCRYPTED = 0 where OPRID = '$userId';" > $scriptFile
+echo "update PSOPRDEFN set PTOPERPSWDV2 = '$vaultPassword', OPERPSWDSALT = ' ', OPERPSWD = ' ', ENCRYPTED = 0 where OPRID = '$userId';" > $scriptFile
 echo "ENCRYPT_PASSWORD $userId;" >> $scriptFile
 
 # Setup DMS config
