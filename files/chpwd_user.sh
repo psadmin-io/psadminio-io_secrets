@@ -38,7 +38,7 @@ function usageInfo()
    echo "     -h               : Display this help"
    echo
    echo " This will pull the password from vault,using <env> as folder and <userId> as item name."
-   echo " FYI: The `<env>:sec_admin` item from vault is used to access Peoplesoft to change passwords."
+   echo " FYI: The '<env>:sec_admin' item from vault is used to access Peoplesoft to change passwords."
    exit
 }
 
